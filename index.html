@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="author" content="N. Kugan">
+<meta name="copyright" content="© 2026 N. Kugan. All rights reserved.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marine OT Simulator</title>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--tx:#14202e;--mu:#5d6b7c;--bd:#d7dde5;--ac:#0a6cc4;--ok:#1a8a4a;--wa:#c98a00;--al:#d12c2c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151d;--card:#18222e;--tx:#e6edf5;--mu:#8fa0b3;--bd:#2a3948;--ac:#4aa3f0;--ok:#3fc77a;--wa:#f0b429;--al:#ff5c5c}}
+:root[data-theme="dark"]{--bg:#0e151d;--card:#18222e;--tx:#e6edf5;--mu:#8fa0b3;--bd:#2a3948;--ac:#4aa3f0;--ok:#3fc77a;--wa:#f0b429;--al:#ff5c5c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+h1{font-size:18px;margin:0}h2{font-size:13px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}
+main{max-width:1000px;margin:0 auto;padding:14px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.wide{grid-column:1/-1}
+.m{margin-bottom:10px}.m .r{display:flex;justify-content:space-between;font-size:14px}.m b{font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden;margin-top:3px}.bar i{display:block;height:100%;background:var(--ok);transition:width .4s,background .3s}
+.bar i.w{background:var(--wa)}.bar i.a{background:var(--al)}
+button{font:inherit;padding:7px 12px;border-radius:7px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;margin:0 6px 6px 0}
+button:hover{border-color:var(--ac)}button.on{background:var(--ac);color:#fff;border-color:var(--ac)}button.f{border-color:var(--al);color:var(--al)}
+input[type=range]{width:100%}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;border:1px solid var(--bd)}
+.al{border-left:4px solid var(--al);padding:5px 8px;margin-bottom:6px;background:var(--bg);font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.al.w{border-color:var(--wa)}.al.k{opacity:.55}
+#log{max-height:200px;overflow:auto}
+#lesson{border-left:4px solid var(--ac);padding-left:10px;color:var(--tx)}
+.lay{display:flex;flex-direction:column;gap:5px}.lay button{text-align:left;margin:0}
+.muted{color:var(--mu);font-size:13px}
+[hidden]{display:none!important}
+nav{display:flex;gap:6px;padding:10px 14px 0;max-width:1000px;margin:0 auto}nav button{margin:0}
+.arch{display:grid;grid-template-columns:minmax(230px,1fr) 1.4fr;gap:16px}@media(max-width:640px){.arch{grid-template-columns:1fr}}
+.chip{display:inline-block;padding:2px 9px;margin:2px;border:1px solid var(--bd);border-radius:99px;font-size:12px}
+.st{border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:10px}.st.dn{opacity:.6}.st h3{margin:0 0 6px;font-size:15px}.st p{margin:3px 0}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}.lc{max-width:380px;text-align:center}.lc h1{font-size:22px;margin:8px 0}
+.lc input{font:inherit;padding:9px;border:1px solid var(--bd);border-radius:7px;background:var(--card);color:var(--tx);width:100%;margin-bottom:8px}
+</style></head><body>
+<!-- Marine OT Simulator. Developed and owned by N. Kugan. © 2026. All rights reserved. -->
+<div id="login"><div class="card lc"><div style="font-size:44px">⚓</div><h1>Marine OT Simulator</h1>
+<p class="muted">Sign in to access the training simulator.</p>
+<div id="gbox"><input type="text" id="nick" placeholder="Choose a nickname" maxlength="30" autocomplete="nickname"><button id="guest" class="on" style="width:100%;margin:0">Enter as guest</button></div>
+<div id="fbbox" hidden><p class="muted" style="margin:14px 0 8px">or sign in with a free account</p>
+<button id="bg" style="width:100%">Continue with Google</button><button id="bh" style="width:100%">Continue with GitHub</button>
+<input type="email" id="em" placeholder="Email" autocomplete="email"><input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+<button id="bi" class="on">Sign in</button><button id="bc">Create account</button></div>
+<p id="lmsg" class="muted" style="color:var(--al)"></p>
+<p class="muted" style="margin-top:14px;font-size:12px">Developed and owned by <b>N. Kugan</b><br>© 2026 N. Kugan. All rights reserved.</p></div></div>
+<div id="app" hidden>
+<header><h1>⚓ Marine OT Simulator <span class="muted" style="font-weight:400">by N. Kugan</span></h1><span style="display:flex;gap:8px;align-items:center"><img id="pic" alt="" width="26" height="26" style="border-radius:50%" hidden><span id="who" class="muted"></span><button id="so" style="margin:0">Sign out</button><button id="snd" style="margin:0">🔇 Sound off</button></span></header>
+<nav><button id="t1" class="on">🛠 Simulator</button><button id="t2">📘 Learning guide</button><button id="t3">🎓 Quiz</button></nav>
+<main id="sim">
+<section class="card wide" id="coach" hidden></section>
+<section class="card wide"><h2>🏆 Challenge mode — response-time scoring</h2>
+<button id="cst" class="on">Start challenge</button><b id="ct" class="muted"></b> <b id="csc"></b>
+<p id="cs" class="muted" style="margin:6px 0">Six surprise faults, one at a time, on a running plant. Respond correctly and fast: 8 s or less scores 100 points.</p><div id="cr"></div></section>
+<section class="card wide"><h2>Live engine room</h2>
+<svg id="sch" viewBox="0 0 760 275" width="100%" style="display:block;max-height:340px" role="img" aria-label="Animated engine room schematic">
+<style>.t{fill:var(--mu);font-size:11px;font-family:system-ui,sans-serif}.o{fill:var(--card);stroke:var(--mu);stroke-width:2}@keyframes wv{to{transform:translateX(-40px)}}#wave{animation:wv 2s linear infinite}</style>
+<rect x="0" y="0" width="760" height="275" rx="8" style="fill:var(--bg)"/>
+<!-- fuel -->
+<rect x="20" y="40" width="70" height="100" class="o"/><rect id="fuel" x="22" y="100" width="66" height="38" style="fill:var(--wa)"/><text x="20" y="156" class="t">FUEL TANK</text>
+<path id="pf" d="M90 100H232" fill="none" stroke="var(--wa)" stroke-width="4" stroke-dasharray="8 8"/>
+<!-- cooling -->
+<path id="pc" d="M130 198V150H232" fill="none" stroke="#3a9ad9" stroke-width="6" stroke-dasharray="10 8"/>
+<circle cx="130" cy="220" r="20" class="o"/><g id="cp"><line x1="130" y1="204" x2="130" y2="236" stroke="var(--tx)" stroke-width="3"/><line x1="114" y1="220" x2="146" y2="220" stroke="var(--tx)" stroke-width="3"/></g><text x="96" y="258" class="t">COOLING PUMP</text>
+<!-- engine -->
+<rect x="232" y="90" width="200" height="104" rx="6" style="fill:var(--bd);stroke:var(--mu);stroke-width:2"/>
+<rect id="stk" x="255" y="34" width="24" height="56" style="fill:var(--mu)"/>
+<g id="sm"><circle cx="267" cy="30" r="6" fill="#999"/><circle cx="267" cy="30" r="6" fill="#999"/><circle cx="267" cy="30" r="6" fill="#999"/></g>
+<g id="cyl"></g>
+<text x="232" y="212" class="t">MAIN ENGINE</text><text id="rt" x="340" y="212" class="t" style="fill:var(--ac)">0 rpm</text>
+<line x1="432" y1="140" x2="610" y2="140" stroke="var(--mu)" stroke-width="6"/>
+<g id="fw"><circle cx="480" cy="140" r="30" class="o"/><line x1="480" y1="112" x2="480" y2="168" stroke="var(--mu)" stroke-width="4"/><line x1="452" y1="140" x2="508" y2="140" stroke="var(--mu)" stroke-width="4"/></g>
+<g id="pr"><ellipse cx="640" cy="112" rx="8" ry="24" fill="var(--ac)"/><ellipse cx="640" cy="168" rx="8" ry="24" fill="var(--ac)"/><ellipse cx="640" cy="140" rx="24" ry="8" fill="var(--ac)" opacity=".6"/></g><text x="612" y="190" class="t">PROPELLER</text>
+<path id="wave" d="M540 205q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0" fill="none" stroke="#3a9ad9" stroke-width="2" opacity=".5" transform="translate(0,-4)"/>
+<!-- gens -->
+<circle cx="320" cy="245" r="18" class="o" id="d1"/><g id="gr1"><line x1="320" y1="231" x2="320" y2="259" stroke="var(--tx)" stroke-width="3"/></g><text x="306" y="272" class="t">DG1</text>
+<circle cx="390" cy="245" r="18" class="o" id="d2"/><g id="gr2"><line x1="390" y1="231" x2="390" y2="259" stroke="var(--tx)" stroke-width="3"/></g><text x="376" y="272" class="t">DG2</text>
+<!-- bilge -->
+<rect x="480" y="215" width="150" height="54" class="o"/><rect id="bw" x="482" y="250" width="146" height="17" fill="#3a9ad9" opacity=".7"/><text x="480" y="212" class="t">BILGE</text>
+<circle cx="660" cy="242" r="14" class="o" id="bpc"/><g id="bpg"><line x1="660" y1="230" x2="660" y2="254" stroke="var(--tx)" stroke-width="3"/></g><text x="640" y="268" class="t">BILGE PUMP</text>
+<rect id="blk" x="0" y="0" width="760" height="275" rx="8" fill="#000" opacity="0" style="pointer-events:none"/>
+<rect id="ab" x="0" y="0" width="760" height="22" fill="var(--al)" opacity="0"/><text id="at" x="10" y="15" style="fill:#fff;font:bold 12px system-ui" ></text>
+</svg></section>
+<section class="card"><h2>Main engine</h2>
+<div class="m"><div class="r"><span>Telegraph (order)</span><b id="tl">0%</b></div><input type="range" id="tele" min="0" max="100" value="0"></div>
+<div id="mm"></div></section>
+
+<section class="card"><h2>Auxiliaries &amp; power</h2>
+<div id="am"></div>
+<div class="muted" style="margin-bottom:6px">Generators (each 450 kW)</div>
+<button id="g1" class="on">DG1 online</button><button id="g2">DG2 offline</button>
+<div class="muted" style="margin:6px 0">Cooling pump</div>
+<button id="cwp1" class="on">CWP1 running</button><button id="cwp2">CWP2 standby</button>
+<div class="muted" style="margin:6px 0">Bilge pump</div>
+<button id="bp">Mode: AUTO</button></section>
+
+<section class="card"><h2>Alarms</h2><div id="log"><span class="muted">No alarms.</span></div></section>
+
+<section class="card"><h2>Inject a scenario</h2>
+<button class="f" data-f="cwp">Cooling pump failure</button>
+<button class="f" data-f="lop">Lube oil leak</button>
+<button class="f" data-f="leak">Bilge ingress</button>
+<button class="f" data-f="spoof">Spoofed sensor (cyber)</button>
+<button class="f" data-f="stg">Steering pump failure</button>
+<button class="f" data-f="bl">Ballast valve leak</button>
+<button id="rs">Reset all</button>
+<p id="lesson" class="muted">Raise the telegraph to start. Inject a fault, then respond like a watchkeeper.</p></section>
+
+<section class="card"><h2>Steering gear</h2>
+<svg id="sg" viewBox="0 0 300 170" width="100%" style="display:block;max-height:220px" role="img" aria-label="Steering gear schematic">
+<path d="M90 0V90Q90 135 150 152Q210 135 210 90V0" fill="none" stroke="var(--mu)" stroke-width="3"/>
+<path d="M51 60H100V100M51 110H100V100M100 100H144" fill="none" stroke="var(--mu)" stroke-width="3"/>
+<g id="od"><line x1="150" y1="110" x2="150" y2="166" stroke="var(--wa)" stroke-dasharray="4 3" stroke-width="2"/></g>
+<g id="rd"><rect x="146" y="110" width="8" height="50" rx="3" fill="var(--ac)"/></g>
+<circle cx="150" cy="110" r="7" style="fill:var(--card);stroke:var(--mu);stroke-width:2"/>
+<circle id="sc1" cx="35" cy="60" r="16" style="fill:var(--card);stroke:var(--mu);stroke-width:2"/><g id="sgp1"><line x1="35" y1="48" x2="35" y2="72" stroke="var(--tx)" stroke-width="3"/></g>
+<circle id="sc2" cx="35" cy="110" r="16" style="fill:var(--card);stroke:var(--mu);stroke-width:2"/><g id="sgp2"><line x1="35" y1="98" x2="35" y2="122" stroke="var(--tx)" stroke-width="3"/></g>
+<text x="24" y="90" class="t">P1</text><text x="24" y="140" class="t">P2</text><text x="222" y="40" class="t">Stern view</text>
+</svg>
+<div class="m"><div class="r"><span>Helm order (port ◄ ► stbd)</span><b id="srt"></b></div><input type="range" id="ord" min="-35" max="35" value="0"></div>
+<button id="sp1" class="on"></button><button id="sp2"></button></section>
+<section class="card"><h2>Ballast system</h2>
+<svg id="bs" viewBox="0 0 300 165" width="100%" style="display:block;max-height:240px" role="img" aria-label="Ballast tanks heel and trim">
+<text x="10" y="14" class="t">Rear view (heel)</text><text x="170" y="14" class="t">Side view (trim)</text>
+<line x1="0" y1="100" x2="300" y2="100" stroke="#3a9ad9" stroke-dasharray="4 4" opacity=".5"/>
+<g id="bh"><path d="M20 60H130L115 140H35Z" fill="none" stroke="var(--mu)" stroke-width="3"/>
+<rect x="30" y="66" width="38" height="68" style="fill:var(--card);stroke:var(--mu)"/><rect id="wpt" x="31" y="100" width="36" height="30" fill="#3a9ad9" opacity=".75"/>
+<rect x="82" y="66" width="38" height="68" style="fill:var(--card);stroke:var(--mu)"/><rect id="wsb" x="83" y="100" width="36" height="30" fill="#3a9ad9" opacity=".75"/>
+<text x="36" y="154" class="t">PORT</text><text x="88" y="154" class="t">STBD</text></g>
+<g id="bt"><path d="M165 75H295L283 125H177Z" fill="none" stroke="var(--mu)" stroke-width="3"/>
+<rect x="180" y="80" width="26" height="40" style="fill:var(--card);stroke:var(--mu)"/><rect id="wap" x="181" y="100" width="24" height="15" fill="#3a9ad9" opacity=".75"/>
+<rect x="262" y="80" width="26" height="40" style="fill:var(--card);stroke:var(--mu)"/><rect id="wfp" x="263" y="100" width="24" height="15" fill="#3a9ad9" opacity=".75"/>
+<text x="182" y="140" class="t">AFT</text><text x="262" y="140" class="t">FWD</text></g>
+</svg>
+<div class="m"><div class="r"><span>Stability</span><b id="brt"></b></div></div>
+<div style="margin-bottom:6px"><button data-bt="fp"></button><button data-bt="pt"></button><button data-bt="sb"></button><button data-bt="ap"></button></div>
+<button id="bf">Fill</button><button id="be">Empty</button><button id="bs0">Stop</button> <span id="bst" class="muted"></span></section>
+<section class="card wide"><h2>OT network map</h2>
+<svg id="nw" viewBox="0 0 760 230" width="100%" style="display:block" role="img" aria-label="OT network map"></svg>
+<button id="iso">Isolate IT/OT link</button><span id="ns" class="muted"></span></section>
+<section class="card wide"><h2>OT architecture — tap a layer</h2>
+<div class="arch"><div class="lay" id="lay"></div><div id="ld"></div></div></section>
+</main>
+<main id="guide" hidden><section class="card wide"><h2>Learning guide — 10 steps</h2><p class="muted">Press "Run this step" to set up the scenario in the simulator, follow the instructions, then mark it done. Each step has a flow diagram and "More details". When you finish, open the Quiz tab.</p><div class="bar"><i id="gp" style="width:0"></i></div><p id="gt" class="muted"></p><div id="gs" style="margin-top:12px"></div><button class="on" onclick="showTab('quiz')">Take the final quiz →</button></section>
+</main>
+<main id="quiz" hidden><section class="card wide"><h2>🎓 Final quiz</h2><div id="qb"></div></section>
+</main>
+<footer style="text-align:center;padding:20px 14px;color:var(--mu);font-size:12px">Marine OT Simulator · Developed and owned by <b>N. Kugan</b> · © 2026 N. Kugan. All rights reserved.</footer>
+</div>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let S,active,logs;
+function init(){S={tele:0,rpm:0,jw:60,aj:60,lo:0,fo:80,bi:10,exh:150,g1:1,g2:0,c1:1,c2:0,bp:'auto',pump:0,F:{cwp:0,lop:0,leak:0,spoof:0,stg:0,bl:0},trip:0,black:0,rud:0,ord:0,sp1:1,sp2:0,iso:0,tk:{fp:30,pt:50,sb:50,ap:30},bsel:"pt",bmode:0};active={};logs=[];$('tele').value=0;sync()}
+const L={
+cwp:"Cooling pump failed. Jacket water temperature climbs. Correct response: start the standby pump (CWP2) and reduce load before the high-temp shutdown. In OT, redundancy only helps if someone notices.",
+lop:"Lube oil pressure is falling. Reduce speed immediately and investigate. Low LO pressure is a protection trip, since bearings fail fast.",
+leak:"Water is entering the bilge. The pump handles small ingress, but note that auto mode masks a problem: always ask WHY the bilge keeps filling.",
+spoof:"CYBER: the jacket water value on the HMI is frozen at a normal reading while the real temperature rises. Spot it by cross-checking independent signals (exhaust temp, engine behaviour, local gauge). Real systems keep an independent safety system that trips on its own sensors."};
+const LY=[
+{t:'L0 Field devices',ic:'🌡️',role:'Sensors, valves, actuators and motors that touch the physical process.',ex:['Temp/pressure sensors','Level switches','Valves','Pumps & motors'],th:'Faulty or spoofed readings, tampered wiring, unauthorised physical access.',df:'Calibration, redundant sensors, cross-checking, locked cabinets.',sim:'Spoofed sensor: the HMI value froze while the real temperature rose.'},
+{t:'L1 Controllers (PLC/DCS)',ic:'⚙️',role:'Run the control logic: engine control, power management, ballast and steering sequences.',ex:['Engine control','Power management PLC','Ballast PLC','Steering controller'],th:'Malicious logic or setpoint changes, unsafe firmware, unmanaged engineering laptops.',df:'Lock programming ports, change control, signed firmware, logic backups.',sim:'Overload blackout: the power management logic decides what happens.'},
+{t:'L2 Supervisory (HMI/alarms)',ic:'🖥️',role:'The screens and alarm system the crew trusts to see and command the plant.',ex:['ECR & bridge HMI','Alarm system','Data historian'],th:'Manipulated display values, alarm suppression, malware via USB.',df:'Role-based access, hardened workstations, USB control, local gauges.',sim:'The alarm list, and the spoofed value on the HMI.'},
+{t:'Safety system (SIS)',ic:'🛑',role:'Independent shutdowns such as overspeed, low LO pressure and high temperature.',ex:['Overspeed trip','Low LO trip','High-temp shutdown'],th:'Bypassed trips, shared networks with control, unauthorised changes.',df:'Keep independent and separate, change control, test trips regularly.',sim:'The engine trips on the real temperature even when the HMI is spoofed.'},
+{t:'IT/OT boundary',ic:'🔥',role:'Controlled gateway between ship IT or shore connections and the OT networks.',ex:['Firewall','DMZ servers','Remote access gateway','Data diode'],th:'Open remote access, weak vendor accounts, flat networks.',df:'Segmentation, MFA, session monitoring, approval before remote sessions.',sim:'The Isolate IT/OT link button on the network map.'},
+{t:'Ship IT & shore',ic:'☁️',role:'Office systems, crew networks, satcom and links to the shore operations centre.',ex:['Satcom','Crew Wi-Fi','Email','Shore fleet centre'],th:'Phishing, malware and compromised vendor connections moving toward OT.',df:'Separate crew and OT networks, patching, awareness training, incident response plan.',sim:'The cyber scenario attack path starts here.'}];
+LY.forEach((l,i)=>{const b=document.createElement('button');b.style.width=(100-i*7)+'%';b.style.alignSelf='center';b.textContent=l.ic+' '+l.t;
+ b.onclick=()=>{[...$('lay').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');
+ $('ld').innerHTML='<h3 style="margin:0 0 6px;font-size:16px">'+l.ic+' '+l.t+'</h3><p style="margin:4px 0">'+l.role+'</p><div>'+l.ex.map(e=>'<span class="chip">'+e+'</span>').join('')+'</div><p style="margin:8px 0 2px"><b style="color:var(--al)">Threats:</b> '+l.th+'</p><p style="margin:2px 0"><b style="color:var(--ok)">Defences:</b> '+l.df+'</p><p class="muted" style="margin:6px 0 0">🎮 In the simulator: '+l.sim+'</p>'};
+ $('lay').appendChild(b)});
+$('lay').children[0].click();
+function meter(n,v,u,max,wl,al,inv){const p=Math.max(0,Math.min(100,v/max*100));let c='';if(inv){if(v<al)c='a';else if(v<wl)c='w'}else{if(v>al)c='a';else if(v>wl)c='w'}
+return `<div class="m"><div class="r"><span>${n}</span><b>${v.toFixed(u=='bar'?1:0)} ${u}</b></div><div class="bar"><i class="${c}" style="width:${p}%"></i></div></div>`}
+function raise(k,txt,sev){if(!active[k]){active[k]=1;logs.unshift({k,txt,sev,ack:0,t:new Date().toLocaleTimeString()})}}
+function clear(k){delete active[k]}
+function tick(){
+ const gens=S.g1+S.g2, cap=gens*450, load=S.black?0:180+S.rpm*2.6;
+ if(!S.black&&load>cap){raise('ovl','Generator overload: blackout!','a');S.black=1;S.trip=1;S.tele=0;$('tele').value=0}
+ if(S.black&&gens&&S.rpm<2){S.black=0;clear('ovl')}
+ const pw=!S.black;
+ const target=S.trip?0:S.tele*1.2;
+ S.rpm+=(target-S.rpm)*(pw?.12:.05);
+ const cool=pw&&((S.c1&&!S.F.cwp)||S.c2);
+ const jt=cool?52+S.rpm*.25:130;
+ S.jw+=(jt-S.jw)*.02; if(S.F.lop)S.lkv=Math.min(1,(S.lkv||0)+.015);S.lo=pw?(S.rpm>3?(S.rpm*.04+.6)*(1-.75*(S.lkv||0)):0.3):0;
+ if(S.F.lop)S.lo=Math.max(0,S.lo*(1-0.01));
+ S.exh+=((150+S.rpm*3+(S.jw>90?(S.jw-90)*4:0))-S.exh)*.1;
+ S.fo=Math.max(0,S.fo-S.rpm*.0008);
+ S.bi=Math.max(0,S.bi+(S.F.leak?1.4:.03)-(S.pump?2.2:0));
+ if(S.bp=='auto'){if(S.bi>60)S.pump=1;if(S.bi<20)S.pump=0}
+ S.aj=(S.F.spoof&&!S.iso)?S.aj:S.jw;
+ const spOk=pw&&((S.sp1&&!S.F.stg)||S.sp2);
+ if(spOk)S.rud+=Math.max(-2.5,Math.min(2.5,S.ord-S.rud));
+ if(pw&&S.bmode)S.tk[S.bsel]=Math.max(0,Math.min(100,S.tk[S.bsel]+S.bmode*2));
+ if(S.F.bl)S.tk.sb=Math.min(100,S.tk.sb+.8);
+ // alarms
+ const chk=(k,c,t,s)=>c?raise(k,t,s):clear(k);
+ chk('jwh',S.aj>90,'Jacket water high','w');
+ chk('exh',S.exh>420,'Exhaust temp high','w');
+ chk('loh',S.lo<2&&S.rpm>20,'LO pressure low','w');
+ chk('fol',S.fo<20,'Fuel service tank low','w');
+ chk('bil',S.bi>70,'Bilge high level','w');
+ chk('heel',Math.abs((S.tk.sb-S.tk.pt)*.12)>5,'LIST ALARM: heel exceeds 5°','a');
+ chk('stg',Math.abs(S.ord-S.rud)>3&&!spOk,'STEERING GEAR FAILURE: rudder not following helm','a');
+ if(!S.trip&&S.jw>105){S.trip=1;raise('t1',`SHUTDOWN: high jacket water (real ${S.jw.toFixed(0)}°C vs HMI ${S.aj.toFixed(0)}°C)`,'a')}
+ if(!S.trip&&S.lo<1.2&&S.rpm>20){S.trip=1;raise('t2','SHUTDOWN: low LO pressure','a')}
+ if(S.trip&&S.rpm<2&&S.tele===0&&!active.t1&&!active.t2&&!active.ovl)S.trip=0;
+ if(S.trip&&S.tele>0){S.tele=0;$('tele').value=0}
+ alertSound();
+ render()}
+function render(){
+ $('tl').textContent=S.tele+'%';
+ $('mm').innerHTML=meter('Engine speed',S.rpm,'rpm',120,100,112)+meter('Jacket water (HMI)',S.aj,'°C',130,88,90)+meter('Lube oil pressure',S.lo,'bar',6,2.5,2,1)+meter('Exhaust temp',S.exh,'°C',600,380,420)+
+ `<span class="pill" style="${S.trip?'color:var(--al);border-color:var(--al)':''}">${S.trip?'ENGINE TRIPPED (reset telegraph to 0)':'Engine available'}</span>`;
+ const load=S.black?0:180+S.rpm*2.6;
+ $('am').innerHTML=meter('Electrical load',load,'kW',900,(S.g1+S.g2)*450*.85,(S.g1+S.g2)*450)+meter('Fuel service tank',S.fo,'%',100,30,20,1)+meter('Bilge level',S.bi,'%',100,50,70)+
+ `<div class="muted" style="margin-bottom:8px">Bilge pump: ${S.pump?'RUNNING':'stopped'} ${S.black?' · <b style="color:var(--al)">BLACKOUT</b>':''}</div>`;
+ $('g1').className=S.g1?'on':'';$('g1').textContent='DG1 '+(S.g1?'online':'offline');
+ $('g2').className=S.g2?'on':'';$('g2').textContent='DG2 '+(S.g2?'online':'offline');
+ $('cwp1').className=S.c1?'on':'';$('cwp1').textContent='CWP1 '+(S.F.cwp?'FAILED':S.c1?'running':'stopped');
+ $('cwp2').className=S.c2?'on':'';$('cwp2').textContent='CWP2 '+(S.c2?'running':'standby');
+ $('bp').textContent='Mode: '+S.bp.toUpperCase()+(S.bp=='manual'?(S.pump?' (click: stop)':' (click: start)'):'');
+ $('log').innerHTML=logs.length?logs.slice(0,12).map((a,i)=>`<div class="al ${a.sev=='w'?'w':''} ${a.ack?'k':''}"><span>${a.t} · ${a.txt}</span>${a.ack?'':`<button style="margin:0;padding:2px 8px" onclick="logs[${i}].ack=1">ACK</button>`}</div>`).join(''):'<span class="muted">No alarms.</span>'}
+function sync(){render()}
+$('tele').oninput=e=>{if(S.trip){e.target.value=0;return}S.tele=+e.target.value}
+$('g1').onclick=()=>{S.g1^=1;if(!S.black&&!S.g1&&!S.g2)S.black=1};$('g2').onclick=()=>{S.g2^=1};
+$('cwp1').onclick=()=>{S.c1^=1};$('cwp2').onclick=()=>{S.c2^=1};
+$('bp').onclick=()=>{if(S.bp=='auto'){S.bp='manual';S.pump=0}else S.pump^=1;};
+$('bp').ondblclick=()=>{S.bp='auto'};
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const f=b.dataset.f;S.F[f]=1;if(f=='spoof'){S.F.cwp=1;S.aj=S.jw;$('lesson').textContent=L.spoof+" (Also the cooling pump has silently failed.) Check the network map and isolate the remote path."}else $('lesson').textContent=L[f]});
+$('rs').onclick=()=>{init();$('ord').value=0;$('lesson').textContent='Reset. Start the engine and try another scenario.'};
+const NS='http://www.w3.org/2000/svg',cyl=$('cyl'),pis=[];
+for(let i=0;i<4;i++){const x=242+i*47,l=document.createElementNS(NS,'rect');
+ l.setAttribute('x',x);l.setAttribute('y',96);l.setAttribute('width',38);l.setAttribute('height',70);l.setAttribute('class','o');cyl.appendChild(l);
+ const p=document.createElementNS(NS,'rect');p.setAttribute('x',x+4);p.setAttribute('width',30);p.setAttribute('height',22);p.setAttribute('fill','var(--ac)');cyl.appendChild(p);pis.push(p)}
+const rot=(id,a,cx,cy)=>$(id).setAttribute('transform',`rotate(${a} ${cx} ${cy})`);
+L.stg="Steering pump 1 failed. Move the helm: if pump 2 is off the rudder will not follow and a steering alarm appears. Start the standby pump immediately. Steering loss is a navigation-safety emergency; a blackout also stops the pumps.";
+let ac=null,snd=0,lb=0;
+function beep(f,d){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+$('snd').onclick=()=>{snd^=1;if(snd&&!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(snd&&ac.resume)ac.resume();$('snd').textContent=snd?'🔊 Sound on':'🔇 Sound off';if(snd)beep(880,.15)};
+function alertSound(){if(!snd)return;lb++;const u=logs.filter(a=>!a.ack&&active[a.k]);if(!u.length)return;const crit=u.some(a=>a.sev=='a');
+ if(crit){beep(1000,.15);setTimeout(()=>beep(1000,.15),250)}else if(lb%3==0)beep(700,.25)}
+$('ord').oninput=e=>{S.ord=+e.target.value};
+$('sp1').onclick=()=>{S.sp1^=1};$('sp2').onclick=()=>{S.sp2^=1};
+$('iso').onclick=()=>{S.iso^=1;if(S.iso&&S.F.spoof)$('lesson').textContent="Remote path isolated. The HMI now shows the real jacket water temperature. Next steps: confirm locally, keep the link cut until it is investigated, report the incident, and restore the standby cooling pump."};
+const nw=$('nw'),NR={},NL=[],atkS=new Set(['hmi','fw','it','sat']);
+const N={sen:[20,170,'Sensors (L0)'],plc:[170,170,'PLC (L1)'],hmi:[320,170,'HMI (L2)'],sis:[170,110,'Safety SIS'],fw:[320,100,'Firewall / DMZ'],it:[470,100,'Ship IT'],sat:[620,100,'Satcom / Shore'],lap:[470,170,'Vendor laptop']};
+const cc=id=>[N[id][0]+55,N[id][1]+20];
+[['sen','plc'],['plc','hmi'],['sen','sis'],['hmi','fw'],['fw','it'],['it','sat'],['lap','hmi']].forEach(([a,b])=>{const l=document.createElementNS(NS,'line'),A=cc(a),B=cc(b);
+ l.setAttribute('x1',A[0]);l.setAttribute('y1',A[1]);l.setAttribute('x2',B[0]);l.setAttribute('y2',B[1]);l.setAttribute('stroke-dasharray','6 6');nw.appendChild(l);NL.push([a,b,l,atkS.has(a)&&atkS.has(b)])});
+Object.entries(N).forEach(([id,[x,y,t]])=>{const r=document.createElementNS(NS,'rect');
+ [['x',x],['y',y],['width',110],['height',40],['rx',6]].forEach(([k,v])=>r.setAttribute(k,v));r.style.strokeWidth=2;nw.appendChild(r);NR[id]=r;
+ const tx=document.createElementNS(NS,'text');tx.setAttribute('x',x+55);tx.setAttribute('y',y+25);tx.setAttribute('text-anchor','middle');tx.style.fill='var(--tx)';tx.style.font='12px system-ui,sans-serif';tx.textContent=t;nw.appendChild(tx)});
+L.bl="Starboard ballast valve is leaking, so the ship slowly lists. Select Port wing and Fill to counter it, then investigate the valve. Ballast changes need planning: watch heel and trim. Ballast control is also a real cyber target.";
+const TN={fp:'Fore peak',pt:'Port wing',sb:'Stbd wing',ap:'Aft peak'};
+document.querySelectorAll('[data-bt]').forEach(b=>b.onclick=()=>{S.bsel=b.dataset.bt});
+$('bf').onclick=()=>{S.bmode=1};$('be').onclick=()=>{S.bmode=-1};$('bs0').onclick=()=>{S.bmode=0};
+function extra2(now){const T=S.tk,hl=(T.sb-T.pt)*.12,tr=(T.fp-T.ap)*.1;
+ rot('bh',hl,75,100);rot('bt',tr,235,100);
+ const w=(id,v,h,bt)=>{const q=Math.max(.5,v*h/100);$(id).setAttribute('height',q);$(id).setAttribute('y',bt-q)};
+ w('wpt',T.pt,66,133);w('wsb',T.sb,66,133);w('wfp',T.fp,38,119);w('wap',T.ap,38,119);
+ $('brt').textContent='Heel '+hl.toFixed(1)+'° · Trim '+tr.toFixed(1)+'°';$('brt').style.color=Math.abs(hl)>5?'var(--al)':'';
+ document.querySelectorAll('[data-bt]').forEach(b=>{const k=b.dataset.bt;b.className=k==S.bsel?'on':'';b.textContent=TN[k]+' '+T[k].toFixed(0)+'%'});
+ $('bf').className=S.bmode==1?'on':'';$('be').className=S.bmode==-1?'on':'';$('bs0').className=S.bmode==0?'on':'';
+ $('bst').textContent=S.black?'No power: pumps stopped':S.F.bl?'⚠ Stbd valve leaking':''}
+function showTab(w){['sim','guide','quiz'].forEach((k,i)=>{$(k).hidden=w!=k;$('t'+(i+1)).className=w==k?'on':''});window.scrollTo(0,0)}
+$('t1').onclick=()=>showTab('sim');$('t2').onclick=()=>showTab('guide');$('t3').onclick=()=>showTab('quiz');
+const inj=f=>document.querySelector('[data-f='+f+']').click(),tl=v=>{S.tele=v;$('tele').value=v},fresh=()=>$('rs').click();
+const GS=[
+{t:'Start the plant',a:'Raise the telegraph slider to about 50%.',o:'Engine speed, jacket water and lube oil rise. Pistons, flywheel and propeller start moving.',l:'Learn the normal values first. You can only spot abnormal ones against a known baseline.',act:()=>{fresh();tl(50)}},
+{t:'Read the live diagram',a:'Look at the fuel line, cooling pipe colour, exhaust smoke and generators.',o:'The cooling pipe turns from blue toward red as the water heats. Smoke grows with speed.',l:'Process visuals and numbers are two views of the same OT data.'},
+{t:'Power management',a:'Set telegraph to 100% with only DG1 running. Next time, start DG2 first.',o:'Load passes 450 kW, so DG1 overloads and a blackout stops the pumps and steering.',l:'Power management decides which loads survive. A blackout cascades into every other system.',act:()=>{fresh();tl(100)}},
+{t:'Cooling pump failure',a:'Inject the fault, then start CWP2 and acknowledge the alarm.',o:'Jacket water climbs and the high-temperature alarm sounds before the shutdown.',l:'Redundancy only helps if the crew notices and responds in time.',act:()=>{fresh();tl(50);inj('cwp')}},
+{t:'Lube oil leak',a:'Inject the fault and cut the telegraph to zero fast.',o:'Pressure drops and the engine trips on low lube oil pressure.',l:'Protection trips exist because some failures cannot wait for a human.',act:()=>{fresh();tl(60);inj('lop')}},
+{t:'Bilge ingress',a:'Inject the fault, watch the auto pump, then switch the bilge pump to manual.',o:'The auto pump hides the problem until the level keeps rising.',l:'Automation can mask a symptom. Always ask why the bilge keeps filling.',act:()=>{fresh();inj('leak')}},
+{t:'Steering gear failure',a:'Inject the fault with the helm at 25°, then start pump 2.',o:'The rudder stops following the helm and a steering alarm appears.',l:'Loss of steering is a navigation emergency. Know your standby actions.',act:()=>{fresh();inj('stg');S.ord=25;$('ord').value=25}},
+{t:'Ballast list',a:'Inject the leak, select Port wing and press Fill until the heel returns to 0°.',o:'The ship heels to starboard and a list alarm appears above 5°.',l:'Ballast affects stability. Control actions should be planned and monitored.',act:()=>{fresh();inj('bl')}},
+{t:'Cyber: spoofed sensor',a:'Compare exhaust temperature with the HMI jacket water. Open the network map and isolate the IT/OT link.',o:'The HMI value stays normal while the real temperature rises, then the engine trips. Isolating the link restores the real reading.',l:'Cross-check independent signals. Keep safety systems separate and control remote access.',act:()=>{fresh();tl(60);inj('spoof')}},
+{t:'Review the architecture',a:'Tap each layer in the OT architecture card and match each scenario to its layer.',o:'Sensors, controllers, HMI, safety system, firewall and shore each have different risks.',l:'Defence in depth means one failure or attack does not reach everything.'}];
+const done=GS.map(()=>0);
+function tgl(i){done[i]^=1;rg()}
+const GD=[
+{fl:['Telegraph order','Controller sets fuel','Engine speed rises','Temperature & pressure follow','Stable running'],w:['Engine speed','Jacket water 55–85 °C','Lube oil 3–5 bar','Exhaust temp'],d:'The telegraph is the order from the bridge to the engine room. The controller turns it into a fuel setting, speed rises gradually, and temperatures and pressure follow. Note the steady values at 50%: they are your baseline for spotting problems later.',m:'Moving the telegraph in big jumps and not noting baseline values.'},
+{fl:['Fuel tank','Fuel line','Cylinders','Shaft','Propeller'],w:['Fuel flow dashes','Cooling pipe colour','Exhaust smoke','Generator spin'],d:'The diagram shows the same data as the meters. Dashes move only while a pump runs, pipe colour reflects temperature and smoke reflects load. Reading the picture helps you notice a stopped pump or a hot pipe before you read numbers.',m:'Reading only the numbers and ignoring how the plant looks.'},
+{fl:['Load rises','Passes 450 kW','Generator overload','Blackout','Start DG2 first'],w:['Electrical load','DG1 / DG2 state','Alarm list'],d:'Each diesel generator supplies 450 kW and engine speed adds load. With one generator, going past capacity causes an overload and blackout, which stops cooling, steering and ballast pumps. Always add generator capacity before adding load.',m:'Raising power first and starting the second generator too late.'},
+{fl:['CWP1 fails','Jacket water rises','High-temp alarm','Start CWP2','Temperature stabilises'],w:['Jacket water','Cooling pipe colour','CWP1 / CWP2 buttons'],d:'With cooling lost, jacket water heats steadily. Starting the standby pump restores flow and the temperature falls back. If nothing is done, the safety system trips the engine at 105 °C.',m:'Acknowledging the alarm without taking action.'},
+{fl:['Oil leak starts','Pressure falls','Low-pressure alarm','Cut speed','Trip avoided'],w:['Lube oil pressure','Alarm list','Engine speed'],d:'Pressure drops gradually as oil is lost. A lower speed needs less oil pressure, so cutting the telegraph quickly buys time. Below 1.2 bar the engine trips to protect the bearings.',m:'Waiting to see if it recovers by itself.'},
+{fl:['Water enters','Level rises','Auto pump starts','Level looks stable','Root cause missed'],w:['Bilge level','Pump state','Bilge mode button'],d:'The auto pump starts at 60% and stops at 20%, so a steady leak is hidden. Switch to manual to take control and ask where the water is coming from. A pump that keeps cycling is itself the symptom.',m:'Trusting automation and not investigating.'},
+{fl:['Pump 1 fails','Rudder stops following','Steering alarm','Start pump 2','Rudder follows again'],w:['Rudder vs order','Pump 1 / 2 status','Alarm list'],d:'The helm order is the dashed line and the rudder follows it. When the running pump fails the rudder freezes. Starting the standby pump restores steering; on a real vessel you would also inform the master and bridge team.',m:'Moving the helm repeatedly instead of starting the standby pump.'},
+{fl:['Valve leaks','Stbd tank fills','Ship heels','List alarm above 5°','Fill port tank'],w:['Heel and trim readout','Tank percentages','Alarm list'],d:'Heel depends on the difference between starboard and port tank levels. Filling the opposite tank restores balance while you investigate the valve. Ballast changes should be gradual and planned.',m:'Emptying the wrong tank and increasing the list.'},
+{fl:['Remote access abused','HMI value frozen','Real temp rises','Cross-check signals','Isolate IT/OT link'],w:['Exhaust temp','HMI jacket water','Network map','Safety trip'],d:'The HMI shows a frozen normal temperature while the engine heats. Exhaust temperature and the network map reveal the mismatch. Isolating the IT/OT link stops the attacker, and the independent safety system still trips on the real sensor.',m:'Trusting a single display, or reconnecting the link before investigating.'},
+{fl:['Field devices','Controllers','HMI','Safety system','IT/OT boundary','Ship IT & shore'],w:['Architecture card','Network map'],d:'Map each scenario to a layer: spoofed sensor (L0 and L2), power management (L1), alarms (L2), safety trip (SIS), remote access (IT/OT boundary). Defence in depth means no single layer is trusted alone.',m:'Treating OT security as only an IT problem.'}];
+function vis(fl){return '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0">'+fl.map((x,i)=>'<span class="chip" style="padding:6px 10px;border-color:'+(i==0?'var(--al)':i==fl.length-1?'var(--ok)':'var(--ac)')+'">'+x+'</span>'+(i<fl.length-1?'<span class="muted">➜</span>':'')).join('')+'</div>'}
+function det(i){const d=GD[i];return '<p>'+d.d+'</p><div>'+d.w.map(x=>'<span class="chip">👁 '+x+'</span>').join('')+'</div><p class="muted"><b>Common mistake:</b> '+d.m+'</p>'}
+function rg(){const n=done.reduce((a,b)=>a+b,0);$('gp').style.width=n/GS.length*100+'%';$('gt').textContent=n+' of '+GS.length+' steps completed';
+ $('gs').innerHTML=GS.map((g,i)=>'<div class="st '+(done[i]?'dn':'')+'"><h3>'+(i+1)+'. '+g.t+(done[i]?' ✓':'')+'</h3><p><b>Do:</b> '+g.a+'</p><p><b>Observe:</b> '+g.o+'</p><p class="muted"><b>Learn:</b> '+g.l+'</p>'+vis(GD[i].fl)+'<details><summary style="cursor:pointer;margin:4px 0">More details</summary>'+det(i)+'</details><button class="on" onclick="runStep('+i+')">Run this step</button><button onclick="tgl('+i+')">'+(done[i]?'Undo':'Mark done')+'</button></div>').join('')}
+function coach(i){const g=GS[i],c=document.getElementById('coach'),last=i==GS.length-1;c.hidden=false;
+ c.innerHTML='<h2>📍 Step '+(i+1)+' of '+GS.length+': '+g.t+'</h2><p><b>Do:</b> '+g.a+'</p><p><b>Observe:</b> '+g.o+'</p>'+vis(GD[i].fl)+det(i)+'<p class="muted"><b>Learn:</b> '+g.l+'</p><button onclick="showTab(\'guide\')">◀ Guide</button><button onclick="document.getElementById(\'coach\').hidden=true">Hide</button><button class="on" onclick="done['+i+']=1;rg();'+(last?'showTab(\'quiz\')':'runStep('+(i+1)+')')+'">'+(last?'Finish → Quiz':'Mark done &amp; next ▶')+'</button>'}
+function runStep(i){if(GS[i].act)GS[i].act();showTab('sim');coach(i)}
+rg();
+const CH={
+cwp:{n:'Cooling pump failure',ok:()=>S.c2,fail:()=>S.trip},
+lop:{n:'Lube oil leak',ok:()=>S.tele<=10,fail:()=>S.trip},
+leak:{n:'Bilge ingress',ok:()=>S.bp=='manual',fail:()=>S.bi>90},
+stg:{n:'Steering pump failure',ok:()=>S.sp2,fail:()=>false},
+bl:{n:'Ballast valve leak',ok:()=>S.bmode==1&&S.bsel=='pt',fail:()=>Math.abs(S.tk.sb-S.tk.pt)*.12>6},
+spoof:{n:'Spoofed sensor',ok:()=>S.iso||S.c2,fail:()=>S.trip}};
+let C={on:0,r:[],sc:0};
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+function cm(m){$('cs').textContent=m}
+function crender(){$('csc').textContent=C.r.length?'  Score '+C.sc:'';$('cr').innerHTML=C.r.map(x=>'<span class="chip" style="border-color:'+(x.ok?'var(--ok)':'var(--al)')+'">'+x.n+': '+(x.ok?x.t.toFixed(1)+' s · '+x.pts+' pts':'failed')+'</span>').join('')}
+function cnext(){if(C.i>=C.o.length)return cfin();fresh();tl(60);C.ph='wait';C.t0=performance.now();C.w=4000+Math.random()*4000;cm('Round '+(C.i+1)+' of '+C.o.length+': plant running, stay alert…');$('ct').textContent=''}
+function cres(ok,pts,t){const k=C.o[C.i];C.r.push({n:CH[k].n,ok,pts,t});C.sc+=pts;C.i++;C.ph='gap';C.t0=performance.now();cm(ok?'✔ '+CH[k].n+' handled in '+t.toFixed(1)+' s (+'+pts+')':'✘ '+CH[k].n+' not handled (0)');crender()}
+function cfin(){C.on=0;C.ph='idle';const mx=C.o.length*100,p=C.sc/mx*100;
+ cm('Finished: '+C.sc+' / '+mx+' → '+(p>=85?'Chief Engineer 🥇':p>=65?'Second Engineer 🥈':p>=45?'Watchkeeper 🥉':'Cadet: keep practising'));$('cst').textContent='Start challenge';$('cst').className='on';crender()}
+$('cst').onclick=()=>{if(C.on){C.on=0;cm('Challenge stopped.');$('cst').textContent='Start challenge';return}
+ C={on:1,o:shuf(Object.keys(CH)),i:0,r:[],sc:0,ph:'',t0:0};$('cst').textContent='Stop challenge';crender();cnext()};
+setInterval(()=>{if(!C.on)return;const n=performance.now(),el=n-C.t0;
+ if(C.ph=='wait'){if(el>=C.w){const k=C.o[C.i];inj(k);if(k=='stg'){S.ord=25;$('ord').value=25}$('lesson').textContent='Challenge in progress: diagnose and respond.';C.ph='run';C.t0=n;cm('⚠ A fault has occurred! Diagnose and respond…')}}
+ else if(C.ph=='run'){const f=CH[C.o[C.i]];$('ct').textContent=(el/1000).toFixed(1)+' s';
+  if(f.fail())cres(0,0,el/1000);else if(f.ok()){const t=el/1000;cres(1,t<=8?100:t<=15?85:t<=25?65:40,t)}else if(el>45000)cres(0,0,45)}
+ else if(C.ph=='gap'){if(el>3500)cnext()}},200);
+const QZ=[
+{q:'Which layer runs control logic such as power management?',o:['L0 field devices','L1 controllers (PLC/DCS)','L2 HMI','Ship IT'],a:1,e:'PLCs and DCS controllers execute the control logic.'},
+{q:'The HMI shows a normal jacket water temperature but exhaust temperature keeps rising. What first?',o:['Trust the HMI','Cross-check independent signals and the local gauge','Mute the alarm','Reboot the HMI'],a:1,e:'Cross-checking independent signals is how you catch spoofed or frozen values.'},
+{q:'Why is the safety system kept independent from normal control?',o:['It costs less','It can still trip if control or the HMI is wrong or compromised','It has simpler screens','Class rules ban sharing displays'],a:1,e:'Independence means one failure or attack cannot disable both control and protection.'},
+{q:'The bilge auto pump keeps the level steady while water keeps entering. The risk?',o:['None, it is working','It masks the root cause','The pump gets louder','The tank gets cleaner'],a:1,e:'Automation can hide a growing problem. Find out why it is filling.'},
+{q:'What does a blackout do?',o:['Only affects lighting','Stops pumps including cooling and steering, so problems cascade','Increases generator capacity','Nothing for OT systems'],a:1,e:'Loss of power takes out many OT systems at once.'},
+{q:'Which is the strongest IT/OT control?',o:['A flat network','Segmentation with a firewall/DMZ and approved remote access','Shared passwords','Open USB ports'],a:1,e:'Segmentation limits how far an intruder can move.'},
+{q:'The ship lists to starboard from a leaking ballast valve. A sensible response?',o:['Fill the starboard tank','Fill the port wing tank and investigate the valve','Ignore it','Increase speed'],a:1,e:'Counter the list with planned ballast and then fix the cause.'},
+{q:'Cooling pump 1 fails at full power. Best response?',o:['Increase speed','Start the standby pump and reduce load','Silence the alarm','Isolate the firewall'],a:1,e:'Restore cooling first and reduce heat load while you diagnose.'},
+{q:'Why monitor and approve vendor remote sessions?',o:['It makes the internet faster','Remote access is a common entry point into OT','Sensors require it','It saves fuel'],a:1,e:'Unmonitored remote access is a classic attack path.'},
+{q:'Good practice for removable media (USB)?',o:['Plug in freely','Control it and scan before use on OT equipment','Use personal drives','Disable alarms first'],a:1,e:'USB devices are a common way malware reaches isolated OT.'}];
+let qi=0,qs=0,qa=0;
+function qr(){const el=$('qb');
+ if(qi>=QZ.length){const r=qs/QZ.length;el.innerHTML='<h3 style="margin:0 0 6px">Quiz complete: '+qs+' / '+QZ.length+'</h3><p class="muted">'+(r>=.8?'Excellent. You are ready for the challenge mode.':r>=.5?'Good. Review the steps you missed and try again.':'Work back through the guide steps, then retake the quiz.')+'</p><button class="on" onclick="qre()">Retake quiz</button>';return}
+ const q=QZ[qi];el.innerHTML='<p class="muted">Question '+(qi+1)+' of '+QZ.length+' · Score '+qs+'</p><p><b>'+q.q+'</b></p>'+q.o.map((o,i)=>'<button style="display:block;width:100%;text-align:left" onclick="qp('+i+')">'+o+'</button>').join('')+'<p id="qf"></p>'}
+function qp(i){if(qa)return;qa=1;const q=QZ[qi];if(i==q.a)qs++;
+ $('qb').querySelectorAll('button').forEach((b,j)=>{if(j==q.a)b.style.borderColor='var(--ok)';else if(j==i)b.style.borderColor='var(--al)'});
+ $('qf').innerHTML=(i==q.a?'✔ Correct. ':'✘ Not quite. ')+q.e+'<br><button class="on" style="margin-top:8px" onclick="qn()">'+(qi==QZ.length-1?'See result':'Next')+'</button>'}
+function qn(){qi++;qa=0;qr()}
+function qre(){qi=0;qs=0;qa=0;qr()}
+qr();
+let sa1=0,sa2=0;
+function extra(now,dt){extra2(now);
+ const r1=S.sp1&&!S.black&&!S.F.stg,r2=S.sp2&&!S.black;
+ if(r1)sa1+=300*dt;if(r2)sa2+=300*dt;rot('sgp1',sa1,35,60);rot('sgp2',sa2,35,110);
+ $('sc1').style.fill=r1?'var(--ok)':'var(--card)';$('sc2').style.fill=r2?'var(--ok)':'var(--card)';
+ rot('rd',S.rud,150,110);rot('od',S.ord,150,110);
+ $('srt').textContent='Rudder '+S.rud.toFixed(0)+'° · Order '+S.ord+'°';
+ $('sp1').className=S.sp1?'on':'';$('sp1').textContent='Pump 1 '+(S.F.stg?'FAILED':S.sp1?'running':'off');
+ $('sp2').className=S.sp2?'on':'';$('sp2').textContent='Pump 2 '+(S.sp2?'running':'standby');
+ const atk=S.F.spoof&&!S.iso,pul=.5+.5*Math.sin(now/200);
+ NL.forEach(([a,b,l,isA])=>{const hot=atk&&isA;l.setAttribute('stroke',hot?'var(--al)':'var(--mu)');l.setAttribute('stroke-width',hot?3:2);
+  l.setAttribute('stroke-dashoffset',-(now/(hot?12:60))%12);l.setAttribute('opacity',S.iso&&a=='fw'&&b=='it'?.2:1)});
+ Object.keys(NR).forEach(id=>{const hot=atk&&atkS.has(id);NR[id].style.stroke=hot?'var(--al)':'var(--mu)';NR[id].style.fill=hot?'rgba(209,44,44,'+(.15+.3*pul)+')':'var(--card)'});
+ $('iso').className=S.iso?'on':'';$('iso').textContent=S.iso?'IT/OT link ISOLATED':'Isolate IT/OT link';
+ $('ns').textContent=atk?'  ⚠ Suspicious remote session is reaching the HMI through the firewall':S.iso?'  IT/OT link cut. Remote access blocked':'  Normal: no suspicious traffic';
+}
+let ang=0,pa=0,ca=0,ga=0,ba=0,off=0,last=performance.now();
+function anim(now){const dt=Math.min(.1,(now-last)/1000);last=now;
+ ang+=S.rpm*6*dt;pa+=S.rpm*6*dt;
+ pis.forEach((p,i)=>p.setAttribute('y',100+(1+Math.sin(ang*Math.PI/180*1+i*Math.PI/2))*20));
+ rot('fw',ang,480,140);rot('pr',pa,640,140);
+ const cool=!S.black&&((S.c1&&!S.F.cwp)||S.c2);ca+=(cool?360:0)*dt;rot('cp',ca,130,220);
+ const gm=S.black?0:360;if(S.g1)ga+=gm*dt;rot('gr1',S.g1?ga:0,320,245);rot('gr2',S.g2?ga:0,390,245);
+ ba+=(S.pump&&!S.black?500:0)*dt;rot('bpg',ba,660,242);
+ off-=dt*40;
+ $('pc').setAttribute('stroke-dashoffset',cool?off:0);$('pf').setAttribute('stroke-dashoffset',S.rpm>3?off:0);
+ const jh=Math.min(1,Math.max(0,(S.jw-50)/60));$('pc').setAttribute('stroke',`hsl(${210-jh*210},80%,50%)`);
+ $('fuel').setAttribute('height',S.fo*.96);$('fuel').setAttribute('y',138-S.fo*.96);
+ $('bw').setAttribute('height',Math.max(1,S.bi*.52));$('bw').setAttribute('y',267-Math.max(1,S.bi*.52));
+ const eh=Math.min(1,Math.max(0,(S.exh-150)/300));$('stk').style.fill=`hsl(${40-eh*40},${20+eh*70}%,${40+eh*10}%)`;
+ [...$('sm').children].forEach((c,i)=>{const pr=((now*.03+i*20)%60)/60;c.setAttribute('cy',30-pr*40);c.setAttribute('r',5+pr*12);c.setAttribute('opacity',(S.rpm/120)*(1-pr)*.7)});
+ $('d1').style.fill=S.g1&&!S.black?'var(--ok)':'var(--card)';$('d2').style.fill=S.g2&&!S.black?'var(--ok)':'var(--card)';
+ $('bpc').style.fill=S.pump?'var(--ok)':'var(--card)';
+ $('rt').textContent=S.rpm.toFixed(0)+' rpm';
+ $('blk').setAttribute('opacity',S.black?.55:0);
+ const un=logs.some(a=>!a.ack&&active[a.k]);
+ $('ab').setAttribute('opacity',un?.5+.5*Math.sin(now/150):0);$('at').textContent=un?'⚠ UNACKNOWLEDGED ALARM — see alarm list':'';extra(now,dt);
+ requestAnimationFrame(anim)}
+init();setInterval(tick,500);requestAnimationFrame(anim);
+</script></body></html>
